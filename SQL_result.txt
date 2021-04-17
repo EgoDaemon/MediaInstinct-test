@@ -1,0 +1,42 @@
+WITH our_query AS
+	(select
+		*
+	from
+		public.test_analytics_2
+	join
+		public.test_analytics
+			on "CalendarDate" >= "CalendarDate_Start" AND "CalendarDate" < "CalendarDate_End")
+SELECT
+	ROUND(SUM("Stock")*1.0/COUNT(*))
+FROM
+	our_query
+WHERE
+	"CalendarMonth" = 1
+
+
+
+WITH our_query AS
+	(select
+		*
+	from
+		public.test_analytics_2
+	join
+		public.test_analytics
+			on "CalendarDate" >= "CalendarDate_Start" AND "CalendarDate" < "CalendarDate_End"),
+results AS
+	(SELECT
+		*,
+		FIRST_VALUE("CalendarDate") OVER(PARTITION BY "CalendarWeek" ORDER BY "CalendarDate" ASC) AS monday,
+		FIRST_VALUE("Stock") OVER(PARTITION BY "CalendarWeek" ORDER BY "CalendarDate" ASC) AS our_stock
+	FROM
+		our_query
+	WHERE
+		"CalendarMonth" = 1)
+SELECT
+	DISTINCT
+	CAST(monday AS DATE),
+	our_stock
+FROM
+	results
+ORDER BY
+	monday
